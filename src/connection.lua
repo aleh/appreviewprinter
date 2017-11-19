@@ -33,8 +33,11 @@ return {
             end
         
             log("Connected to '%s'. IP: %s", current_ssid or "?", ip or "?")
+            
+            enter_idle()
+            
             state = 'connected'
-            node.task.post(function()
+            node.task.post(0, function()
                 callback(true)
             end)
         end

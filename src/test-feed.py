@@ -49,7 +49,7 @@ def feed():
     print("Number of changes: %d" % (num_changes,))
     new_reviews = []
     for i in range(num_changes):
-        action = random.choice(['insert', 'change', 'change'])
+        action = random.choice(['insert', 'delete', 'change', 'change'])
         if action == 'insert':
             global next_review_id
             print("Adding #%d" % (next_review_id,))
@@ -61,6 +61,11 @@ def feed():
                 "author" : lorem.sentence()
             })
             next_review_id = next_review_id + 1
+        elif action == 'delete':
+            if len(new_reviews) > 0:
+                index = random.randint(0, len(new_reviews) - 1)
+                print("Removing at %d", index)
+                new_reviews.pop(index)
         elif action == 'change':
             r = random.choice(review_feed)
             field = random.choice(['body', 'title', 'rating', 'rating'])
@@ -78,4 +83,4 @@ def feed():
     return header + ",".join(map(json_for_review, review_feed)) + footer
 
 if __name__ == '__main__':
-    app.run()
+    app.run(host = "0.0.0.0")

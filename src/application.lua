@@ -2,6 +2,7 @@ local function log(message, ...)
     print(string.format("main: " .. message, ...))
 end     
 
+-- A global to trace heap, something to keep an eye on in this project, used from submodules.
 local prev_heap = nil
 log_heap = function(msg)
     local h = node.heap()
@@ -17,7 +18,7 @@ log_heap = function(msg)
     prev_heap = h
 end
 
--- Non-caching version of require. Global because used from submodules.
+-- Global non-caching version of `require`, used from submodules.
 _require = function(s)
     local name = s .. ".lc"
     if file.exists(name) then
@@ -32,6 +33,7 @@ end
 
 local function main()
     
+    -- It's useful to know why the device has been woken up.
     local code, info = node.bootreason()
     local reasons = {
         [0] = "power-on",
@@ -44,7 +46,8 @@ local function main()
     }
     log("Starting. Boot reason: %s", reasons[info] or "unknown")
     reasons = nil
-        
+    
+    -- Let's see how much heap we begin with.
     log_heap()
 
     log("Loading config...")
@@ -119,8 +122,12 @@ local function main()
             "raw-feed.json",
             function(succeeded, message)
                 request = nil
-                node.task.post(function()
+                node.task.post(0, function()
+                    
                     -- TODO: Deactivate WiFi here
+                    
+                    log_heap("after download")
+                    
                     if succeeded then
                         log("Done refreshing")
                         enter_parsing()
@@ -134,7 +141,7 @@ local function main()
     end
             
     --
-    -- Processing
+    -- Parsing the raw feed and storing it on flash.
     --    
     enter_parsing = function()
         
@@ -153,21 +160,19 @@ local function main()
     end        
     
     --
-    -- Finding changes
-    --    
+    -- Looking for changes in the new DB compared to the old DB.
+    -- 
     enter_processing_changes = function()
+        
         log("Processing changes...")
         state = 'processing-changes'
-        _require("find_changes")(function(error)
-            if error then
-                log("Could not find changes: %s", error)
-            else
-                log("Done processing changes")
-            end
+        
+        _require("find_changes"):run(function(error)
+            log("Done processing changes")
             enter_sleeping(error == nil)
         end)
-    end    
-
+    end
+        
     enter_connecting()
 end
 
