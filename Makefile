@@ -9,7 +9,7 @@ FILES=$(filter-out $(EXCLUDE),$(SRC))
 DDIR=.deps
 DEPS=$(patsubst %.lua,%.d,$(patsubst %,$(DDIR)/%,$(FILES)))
 
-UPLOADER=nodemcu-uploader --port /dev/tty.wchusbserial*
+UPLOADER=nodemcu-uploader --port /dev/tty.wchusbserial* 
 
 $(DDIR)/%.d: %.lua
 	luac -p $<
