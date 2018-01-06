@@ -66,18 +66,35 @@ return {
                 i = i + to_move
             end
         end
-
+        
+        self.to_cp437 = function(_self, text)
+            for i = 1, text:len() do
+            end
+        end
+        
+        -- Adds one or more paragraphs performing simple word wrapping. 
+        -- The text is supposed to have no space or control characters except for an LF and a whitespace.
         self.add_text = function(_self, text)
             
-            local state = 'line-start'
+            -- TODO: filter out control characters and convert to CP437
+                        
             local start_index, end_index
+            local state = 'line-start'
+            if col == 0 then
+                state = 'line-start'
+            else
+                state = 'first-word'
+                start_index = 1
+                end_index = 1
+            end
             local i = 1
             while i <= text:len() do
                 local b = text:byte(i)
                 assert(b == 10 or b >= 32, "unexpected control character")
                 if state == 'line-start' then
                     if b <= 32 then
-                        -- A space or a newline — ignoring them all in the beginning of the line.
+                        -- A space or a newline — ignoring everything except newlines to allow empty lines.
+                        if b == 10 then _self:_newline() end
                     else
                         -- A non-space, our line begins.
                         state = 'first-word'
@@ -127,8 +144,10 @@ return {
                 i = i + 1
             end
             
-            -- End of text should work like a space.
-            if state ~= 'space' then end_index = text:len() end
+            -- Let's make the end of text work like a non-space, so if our text consists of multiple calls to add_text,
+            -- then they'll glue together with all the spaces.
+            --~ if state ~= 'space' then end_index = text:len() end
+            end_index = text:len()
             
             -- Let's output whatever we've collected, it should fit.
             if state ~= 'line-start' then
