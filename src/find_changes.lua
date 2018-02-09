@@ -2,6 +2,8 @@ local function log(message, ...)
     print(string.format("diff: " .. message, ...))
 end
 
+-- How many changed reviews we can print at once.
+local max_reviews_to_print = 3
 local old_db, new_db, error, changed = false
 local has_old_reviews
 
@@ -106,32 +108,34 @@ return {
             end
         end
     end,
-    
+        
     run = function(self, callback)
         
         log_heap("before processing")
-        
-        local printer = _require("printer")
-        
-        log_heap("required printer")
-        
+                
         if not self:open() then
             callback("could not open the databases")
             return
         end
         
-        log_heap("opened DBs")        
+        log_heap("opened DBs")
         
         local something_changed = false
-
-        local did_finish = function(error)
-            printer = nil
-            self:close(something_changed and error == nil)
-            callback(error)
-        end        
         
+        -- Partial reviews to be printed out (partial are the ones having only ID and position info).
+        local reviews_to_print = {}
+
+        local did_finish = function(error)            
+            self:close(something_changed and error == nil)
+            if error then
+                callback(error)
+            else
+                callback(nil, reviews)
+            end
+        end
+                
         local reviews_printed = 0
-            
+                
         local process_next_change
         process_next_change = function()
         
@@ -143,45 +147,23 @@ return {
                 did_finish(nil)
                 return
             end
-        
-            log("#%d: %s", review.id, change)
-            
+                    
             if change ~= 'none' then
                 
                 something_changed = true
                 
-                if reviews_printed < 3 then
-                    
-                    local r = new_db:full_review(review)
-                    if not r then
-                        did_finish("could not fetch the contents of the review #%d", review.id)
-                        return
-                    end
-
-                    -- TODO: format it here
-                    local doc = string.format("#%d: %s", r.id, r.title)
-                
-                    printer:submit(
-                        doc,
-                        function (error)
-                            if error then
-                                did_finish("could not print review #%d", review.id)
-                            else
-                                log("done printing #%d", review.id)
-                                reviews_printed = reviews_printed + 1
-                                node.task.post(0, process_next_change)
-                            end
-                        end
-                    )
+                if #reviews_to_print < max_reviews_to_print then                    
+                    table.insert(reviews_to_print, review)
+                    log("#%d: %s, will print", review.id, change)
                 else
-                    -- Printed what we could already, but let's continue logging changes to the console.
-                    -- TODO: perhaps can finish the process at this point when in production
-                    node.task.post(0, process_next_change)
+                    log("#%d: %s, won't print, reached the limit", review.id, change)
                 end
             else
-                node.task.post(0, process_next_change)
+                log("#%d: no changes", review.id)
             end
-        end        
+            
+            node.task.post(0, process_next_change)
+        end
         
         node.task.post(0, process_next_change)        
     end

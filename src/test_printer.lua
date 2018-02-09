@@ -19,7 +19,31 @@ doc:add_text("Call me Ishmael. Some years ago- never mind how long precisely- ha
 
 doc:add_text("There now is your insular city of the Manhattoes, belted round by wharves as Indian isles by coral reefs- commerce surrounds it with her surf. Right and left, the streets take you waterward. Its extreme downtown is the battery, where that noble mole is washed by waves, and cooled by breezes, which a few hours previous were out of sight of land. Look at the crowds of water-gazers there.")
 
+doc:add_text("\n")
+
+-- These have to look like codes from 0x80 to 0xFF
+doc:add_text("ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥₧ƒ")
+doc:add_text("áíóúñÑªº¿⌐¬½¼¡«»░▒▓│┤╡╢╖╕╣║╗╝╜╛┐")
+doc:add_text("└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀")
+doc:add_text("αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■ ")
+
+-- Escapes non-ASCII characters in the given string. (%q of string.format() escapes only control characters)
+local quoted = function(s)
+    local result = ""
+    for i = 1, s:len() do
+        local b = s:byte(i)
+        if 0x20 <= b and b <= 0x7e then
+            result = result .. string.char(b)
+        elseif b == 0x0a then
+            result = result .. "\\n"
+        else
+            result = result .. string.format("\\x%02x", b)
+        end
+    end
+    return "\"" .. result .. "\""
+end
+
 local lines = doc:finish()
 for _, v in ipairs(lines) do
-    print(string.format("%q", v))
+    print(quoted(v))
 end

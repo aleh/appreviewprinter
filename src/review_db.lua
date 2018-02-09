@@ -281,11 +281,12 @@ local new = function(mode, name)
             return result
         end
         
-        -- Returns a partial review by its id or nil it could not find it. Linear search.
-        self.find_by_id = function(_self, id)
+        -- Returns a review by its id or nil it could not find one. Linear search.
+        -- Pass `true` for the `all` parameter to get all the content fields as well.
+        self.find_by_id = function(_self, id, all)
             self:reset()
             while true do
-                local r = self:read(false)
+                local r = self:read(all)
                 if not r then return nil end                    
                 if r.id == id then return r end
             end
