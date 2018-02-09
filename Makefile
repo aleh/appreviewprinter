@@ -3,7 +3,7 @@
 	
 # TODO: exclude config-example.lua and init.lua
 SRC=$(wildcard src/*.lua) ustream/uhttp.lua ustream/ujson.lua ustream/review_feed_parser.lua
-EXCLUDE=*example* *test* preupload.lua
+EXCLUDE=src/preupload.lua $(wildcard src/test_*.lua) $(wildcard src/*example*.lua)
 FILES=$(filter-out $(EXCLUDE),$(SRC))
 
 DDIR=.deps
@@ -23,12 +23,12 @@ $(DDIR)/all.d: $(FILES)
 	$(UPLOADER) node restart
 	sleep 2	
 	
-	$(UPLOADER) upload preupload.lua
-	$(UPLOADER) exec preupload.lua
+	# $(UPLOADER) upload ./src/preupload.lua:preupload.lua
+	$(UPLOADER) exec ./src/preupload.lua
 	
 	make $(DEPS)
 	
-	$(UPLOADER) upload -r init.lua
+	$(UPLOADER) upload -r src/init.lua:init.lua
 	
 	touch $(DDIR)/all.d
 	

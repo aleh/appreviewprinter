@@ -73,12 +73,12 @@ local function main()
         node.task.post(0, function()
             log_heap()
             log("Good night!")
-            node.dsleep(timeout * 1e6)
+            node.dsleep(timeout * 1e6, 4)
         end)
     end
     
     -- Sort of forward declarations
-    local enter_refreshing, enter_parsing, enter_processing_changes  
+    local enter_refreshing, enter_parsing, enter_processing_changes, enter_printing
     
     ---
     --- Connecting
@@ -141,14 +141,14 @@ local function main()
     end
             
     --
-    -- Parsing the raw feed and storing it on flash.
+    -- Parsing the raw feed and storing it on the flash.
     --    
     enter_parsing = function()
         
         log("Parsing the feed file...")
         state = 'parsing'
         
-        _require("parse_feed_file").run(function(error)            
+        _require("parse_feed_file").run(function(error)
             if not error then
                 log("Done parsing the feed file")                
                 enter_processing_changes()
@@ -167,10 +167,25 @@ local function main()
         log("Processing changes...")
         state = 'processing-changes'
         
-        _require("find_changes"):run(function(error)
+        _require("find_changes"):run(function(error, reviews)
             log("Done processing changes")
-            enter_sleeping(error == nil)
+            if error then
+                enter_sleeping(true)
+            else
+                enter_printing(reviews)
+            end
         end)
+    end
+    
+    enter_printing = function(reviews)
+        
+        log("Printing %d reviews...", #reviews)
+        state = 'printing'
+        
+        _require("printer"):print_reviews(reviews, function(error)
+            log("Done printing")
+            enter_sleeping(error == nil)
+        end)        
     end
         
     enter_connecting()
