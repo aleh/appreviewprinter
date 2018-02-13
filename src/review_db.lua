@@ -13,7 +13,7 @@ end
     If there is a DB with to_name already, then it will be replaced. 
     Returns true, of succeeded.
 ]]--
-move = function(from_name, to_name)
+local move = function(from_name, to_name)
     local from_index, from_content = file_names(from_name)
     local to_index, to_content = file_names(to_name)
     file.remove(to_index)
