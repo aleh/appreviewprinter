@@ -30,8 +30,21 @@ return {
         end                
     
         log_heap("before processing")
+        
+        review_db = _require("review_db").new("writer", "new-reviews")
+        if not review_db then
+            did_finish("Could not open the review db writer")
+            return
+        end        
+        log_heap("db writer")        
+        
+        feed_file = file.open("raw-feed.json")        
+        if not feed_file then
+            did_finish("Could not open feed file")
+            return
+        end
+        log_heap("feed file")        
                         
-        -- Initializing the parser first because it needs the most of temp memory.
         parser = _require("review_feed_parser").new({
             review = function(p, a)
             
@@ -52,21 +65,7 @@ return {
             end
         })
         log_heap("review feed parser")
-        
-        review_db = _require("review_db").new("writer", "new-reviews")
-        if not review_db then
-            did_finish("Could not open the review db writer")
-            return
-        end        
-        log_heap("db writer")        
-        
-        feed_file = file.open("raw-feed.json")        
-        if not feed_file then
-            did_finish("Could not open feed file")
-            return
-        end
-        log_heap("feed file")        
-                
+                                
         local process_line
         process_line = function()
             local line = feed_file:read(256)

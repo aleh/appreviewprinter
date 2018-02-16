@@ -130,11 +130,9 @@ return {
             if error then
                 callback(error)
             else
-                callback(nil, reviews)
+                callback(nil, reviews_to_print)
             end
         end
-                
-        local reviews_printed = 0
                 
         local process_next_change
         process_next_change = function()

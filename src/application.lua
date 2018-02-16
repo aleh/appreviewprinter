@@ -1,8 +1,8 @@
 local function log(message, ...)
     print(string.format("main: " .. message, ...))
-end     
+end
 
--- A global to trace heap, something to keep an eye on in this project, used from submodules.
+-- A global function tracing the heap, something to keep an eye on in this project, used from submodules.
 local prev_heap = nil
 log_heap = function(msg)
     local h = node.heap()
@@ -31,6 +31,9 @@ _require = function(s)
     return nil
 end
 
+-- Another small global that's handy while debugging things.
+dump = function(t)  for k, v in pairs(t) do print(k, v) end end
+
 local function main()
     
     -- It's useful to know why the device has been woken up.
@@ -42,18 +45,21 @@ local function main()
         [3] = "software watchdog reset",
         [4] = "software restart",
         [5] = "wake from deep sleep",
-        [6] = "external reset"
+        [6] = "ext reset"
     }
-    log("Starting. Boot reason: %s", reasons[info] or "unknown")
+    log("Boot reason: %s", reasons[info] or "unknown event")
     reasons = nil
     
     -- Let's see how much heap we begin with.
     log_heap()
 
-    log("Loading config...")
-    local config = _require("config")
-    
     local state = 'idle'
+    
+    local set_state = function(new_state)
+        state = new_state
+        log("State: %s", state)
+        log_heap()
+    end
                 
     --
     -- Sleeping
@@ -68,11 +74,9 @@ local function main()
         end
         
         log("Going to sleep for %d second(s)...", timeout)
-        state = 'sleeping'
+        set_state('sleeping')
         
         node.task.post(0, function()
-            log_heap()
-            log("Good night!")
             node.dsleep(timeout * 1e6, 4)
         end)
     end
@@ -80,26 +84,27 @@ local function main()
     -- Sort of forward declarations
     local enter_refreshing, enter_parsing, enter_processing_changes, enter_printing
     
-    ---
-    --- Connecting
-    ---
+    --
+    -- Connecting
+    --
     local enter_connecting = function()
 
-        state = 'connecting'
-        log("Connecting...")
+        set_state('connecting')
         
         _require("connection").activate(
-            config.networks,
+            _require("config").networks,
             function(succeeded, msg)
                 if succeeded then
-                    log_heap("up")
-                    enter_refreshing()
+                    node.task.post(0, function()
+                        enter_refreshing()
+                    end)
                 else
                     log("Could not activate the connection: %s", msg)
                     enter_sleeping(false)
                 end
             end
         )
+        
         log_heap("activating connection")
     end    
     
@@ -108,23 +113,23 @@ local function main()
     --        
     enter_refreshing = function() 
         
-        state = 'refreshing'        
-        log("Refreshing...")
+        set_state('refreshing')
         
-        log_heap()
         local request = _require("uhttp").request.new()
         log_heap("required uhttp")
         
+        local feed = _require("config").feed
+        
         request:download(
-            config.feed.host, 
-            config.feed.path,
-            config.feed.port,
+            feed.host, 
+            feed.path,
+            feed.port,
             "raw-feed.json",
             function(succeeded, message)
                 request = nil
                 node.task.post(0, function()
                     
-                    -- TODO: Deactivate WiFi here
+                    wifi.setmode(wifi.NULLMODE, true)
                     
                     log_heap("after download")
                     
@@ -138,6 +143,8 @@ local function main()
                 end)
             end
         )
+        
+        log_heap("started download")
     end
             
     --
@@ -145,8 +152,7 @@ local function main()
     --    
     enter_parsing = function()
         
-        log("Parsing the feed file...")
-        state = 'parsing'
+        set_state('parsing')
         
         _require("parse_feed_file").run(function(error)
             if not error then
@@ -157,37 +163,37 @@ local function main()
                 enter_sleeping(false)
             end
         end)
-    end        
+    end
     
     --
     -- Looking for changes in the new DB compared to the old DB.
     -- 
     enter_processing_changes = function()
         
-        log("Processing changes...")
-        state = 'processing-changes'
+        set_state('processing')
         
         _require("find_changes"):run(function(error, reviews)
             log("Done processing changes")
             if error then
-                enter_sleeping(true)
+                    enter_sleeping(true)
             else
-                enter_printing(reviews)
+                node.task.post(0, function()
+                    enter_printing(reviews)
+                end)
             end
         end)
     end
     
     enter_printing = function(reviews)
         
-        log("Printing %d reviews...", #reviews)
-        state = 'printing'
+        set_state('printing')
         
         _require("printer"):print_reviews(reviews, function(error)
             log("Done printing")
             enter_sleeping(error == nil)
-        end)        
+        end)      
     end
-        
+    
     enter_connecting()
 end
 

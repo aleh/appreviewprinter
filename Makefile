@@ -23,7 +23,6 @@ $(DDIR)/all.d: $(FILES)
 	$(UPLOADER) node restart
 	sleep 2	
 	
-	# $(UPLOADER) upload ./src/preupload.lua:preupload.lua
 	$(UPLOADER) exec ./src/preupload.lua
 	
 	make $(DEPS)

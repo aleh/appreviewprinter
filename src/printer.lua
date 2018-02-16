@@ -1,3 +1,7 @@
+local function log(message, ...)
+    print(string.format("printer: " .. message, ...))
+end     
+
 return {
     
     -- Creates and returns a new instance of a "document" builder.
@@ -220,7 +224,7 @@ return {
         return self
     end,
     
-    submit = function(self, doc, callback)
+    submit = function(self, lines, callback)
         
         print("Printing...")
         
@@ -240,18 +244,36 @@ return {
             return "\"" .. result .. "\""
         end
 
-        local lines = doc:finish()
-        for _, v in ipairs(lines) do
-            print(quoted(v))
-        end
+        local line_index = 1
+        
+        local submit_next_line
+        submit_next_line = function()
+            if line_index < #lines then
                 
-        tmr.create():alarm(5000, tmr.ALARM_SINGLE, function()
-            callback(nil)
-        end)
+                -- TODO: Submit to the printer here. Of course unquoted.
+                print(quoted(lines[line_index]))
+                
+                line_index = line_index + 1
+                node.task.post(0, submit_next_line)
+            else
+                -- TODO: trigger the callback directly of course.
+                tmr.create():alarm(5000, tmr.ALARM_SINGLE, function()
+                    callback(nil)
+                end)
+            end
+        end
+        
+        node.task.post(0, submit_next_line)
     end,
     
     -- Prints partial reviews in the given table.
     print_reviews = function(self, reviews, callback)
+        
+        if #reviews == 0 then
+            log("No reviews to print")
+            callback(nil)
+            return
+        end
         
         log("Going to print %d review(s)", #reviews)
         
@@ -279,8 +301,6 @@ return {
             callback(error)
         end
         
-        local printer = _require("printer")
-        
         local next_review_index = 1
                 
         local print_next
@@ -299,20 +319,22 @@ return {
                 did_finish(string.format("could not fetch the contents of the review #%d", review.id))
                 return
             end
-                
+            
             local doc = self.new_doc()
             doc:add_text(string.format("\n#%d '", r.id))
             doc:add_text(r.title)
             doc:add_text("'\n")
-            doc:add_text("by ")
+            doc:add_text("by [")
             doc:add_text(r.author)
-            doc:add_text("\n\n")
+            doc:add_text("]\n\n")                        
             doc:add_text(r.content)
             doc:add_text("\n\n")
             doc:add_text("---\n\n")
+            
+            local lines = doc:finish()
 
-            printer:submit(
-                doc,
+            self:submit(
+                lines,
                 function (error)
                     if error then
                         did_finish(string.format("could not print review #%d", review.id))
