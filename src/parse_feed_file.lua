@@ -21,9 +21,7 @@ return {
             end
         
             parser = nil
-            
-            node.setcpufreq(node.CPU80MHZ)
-                        
+                                    
             node.task.post(0, function()
                 callback(error)
             end)
@@ -82,8 +80,6 @@ return {
                 parser:finish()
             end
         end        
-
-        node.setcpufreq(node.CPU160MHZ)
     
         node.task.post(0, process_line)
     end

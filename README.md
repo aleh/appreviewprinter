@@ -26,8 +26,8 @@ TTL connector wires:
 
         BLACK  - GND
         RED    - VCC
-        YELLOW - TX (i.e. data from the controller to the printer)
-        GREEN  - perhaps RX, though was not able to get anything back from the printer.
+        YELLOW - RX (i.e. data from the controller to the printer)
+        GREEN  - perhaps TX, though was not able to get anything back from the printer.
         BLUE   - sort of a CTS signal, 0 if the printer ready, 1 if we need to wait.
 
 See `./doc/escpos.pdf` on some of the escape commands supported.

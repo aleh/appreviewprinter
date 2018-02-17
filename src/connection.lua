@@ -20,7 +20,8 @@ return {
         local enter_idle = function()
             if state ~= 'idle' then
                 state = 'idle'
-                wifi.sta.eventMonStop()
+                wifi.eventmon.unregister(wifi.eventmon.STA_DISCONNECTED)
+                wifi.eventmon.unregister(wifi.eventmon.STA_GOT_IP)
                 log("idle")
             end
         end
@@ -84,25 +85,19 @@ return {
                     log("Connecting to '%s'...", current_ssid)
                 
                     node.task.post(function ()
-                        wifi.sta.eventMonReg(wifi.STA_APNOTFOUND, function() 
-                            node.task.post(function()            
-                                did_fail_to_connect("Could not find an AP to join")
-                            end)
-                        end)
-                        wifi.sta.eventMonReg(wifi.STA_FAIL, function()
+                        --[[
+                        wifi.eventmon.register(wifi.eventmon.STA_DISCONNECTED, function()
                             node.task.post(function()            
                                 did_fail_to_connect("Failed") 
                             end)
                         end)
-                        wifi.sta.eventMonReg(wifi.STA_GOTIP, function() 
+                        ]]--
+                        wifi.eventmon.register(wifi.eventmon.STA_GOT_IP, function() 
                             node.task.post(function()            
                                 did_connect(wifi.sta.getip())
                             end)
                         end)
-
-                        wifi.sta.eventMonStart(500)
-                    
-                        wifi.sta.config(ssid, p)
+                        wifi.sta.config({ssid = ssid, pwd = p, auto = true, save = false})
                     end)
                     return
                 end

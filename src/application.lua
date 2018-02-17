@@ -52,6 +52,8 @@ local function main()
     
     -- Let's see how much heap we begin with.
     log_heap()
+    
+    node.setcpufreq(node.CPU160MHZ)    
 
     local state = 'idle'
     
@@ -77,7 +79,7 @@ local function main()
         set_state('sleeping')
         
         node.task.post(0, function()
-            node.dsleep(timeout * 1e6, 4)
+            node.dsleep(timeout * 1000000, 4)
         end)
     end
     
