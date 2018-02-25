@@ -21,7 +21,9 @@ return {
             end
         
             parser = nil
-                                    
+            
+            node.setcpufreq(node.CPU80MHZ)
+                        
             node.task.post(0, function()
                 callback(error)
             end)
@@ -80,6 +82,9 @@ return {
                 parser:finish()
             end
         end        
+
+        -- Our JSON parser is extremely slow, let's boost the speed.
+        node.setcpufreq(node.CPU160MHZ)    
     
         node.task.post(0, process_line)
     end

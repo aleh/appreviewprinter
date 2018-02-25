@@ -1,4 +1,4 @@
-local doc = require("printer").new_doc()
+local doc = require("printer_doc")
 
 doc:begin()
 

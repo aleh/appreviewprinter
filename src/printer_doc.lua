@@ -2,6 +2,12 @@ local self = {}
 
 local lines, line, col, max_cols
 
+-- The current font mode for ESC ! sequence.
+local mode = 0
+
+local FONT_A_MAX_COLS = 31
+local FONT_B_MAX_COLS = 41
+
 self.begin = function(_self)
     -- The array of completed lines.
     lines = {}
@@ -12,7 +18,10 @@ self.begin = function(_self)
     -- The number of columns per line. 
     -- On a 58mm printer, this is 32 with font A, 42 with font B.
     -- TODO: make it a parameter here
-    max_cols = 32
+    max_cols = FONT_A_MAX_COLS
+    
+    mode = 0
+    
     -- Let's begin with a "reset all" escape sequence.
     _self:_add_codes("\027@")
 end
@@ -116,6 +125,36 @@ local cp437 = function(text)
             end
         end
     end
+end
+
+self._with_mode = function(_self, m, callback)
+    mode = bit.bor(mode, m)
+    _self:_add_codes("\027!" .. string.char(mode))
+    callback()
+    mode = bit.band(mode, bit.bnot(m))
+    _self:_add_codes("\027!" .. string.char(mode))
+end
+
+-- Sets the small font mode, calls the given function and returns back to the normal font mode.
+self.with_small_font = function(_self, callback)
+
+    local prev_max_cols = max_cols
+    max_cols = FONT_B_MAX_COLS
+    
+    -- Let's try to recalculate the current position in case somebody will use this in the middle of the string.
+    col = (col * max_cols + prev_max_cols - 1) / prev_max_cols
+
+    _self:_with_mode(1, callback)
+    
+    -- Well, let's try to recalculate again, though precision is not going to be good.
+    col = (col * prev_max_cols + max_cols - 1) / max_cols
+
+    max_cols = prev_max_cols
+end
+
+-- Sets the bold font mode, calls the given function and returns back to the normal font mode.
+self.with_emphasis = function(_self, callback)
+    _self:_with_mode(8, callback)
 end
         
 -- Adds one or more paragraphs of UTF-8 encoded text performing simple word wrapping. 

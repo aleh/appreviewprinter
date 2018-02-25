@@ -12,7 +12,7 @@ return {
         gpio.mode(pin, gpio.OUTPUT)
         gpio.write(pin, gpio.HIGH)        
 
-        local _write = function(_b)
+        local _write = function(_b, callback)
     
             -- We are beginning with a start bit, which is a logical zero (though it can be represented with the LOW state of the pin).
             local prev_state = false
@@ -43,14 +43,26 @@ return {
             table.insert(times, toggle_in)
             
             -- The initial state here defines whether we'll be using LOW or HIGH for a logic one.
-            gpio.serout(pin, gpio.LOW, times)
-            gpio.write(pin, gpio.HIGH)
+            gpio.serout(pin, gpio.LOW, times, 1, function()
+                gpio.write(pin, gpio.HIGH)
+                callback()
+            end)
         end
         
-        self.write = function(self, data)
-            for i = 1, data:len() do
-                _write(data:byte(i))
+        self.write = function(self, data, callback)
+            local i = 1
+            local write_next
+            write_next = function()
+                if i <= data:len() then
+                    _write(data:byte(i), function()
+                        i = i + 1
+                        write_next()
+                    end)
+                else
+                    callback()
+                end
             end
+            node.task.post(0, write_next)
         end
 
         self.deinit = function(self)
