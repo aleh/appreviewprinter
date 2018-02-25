@@ -10,6 +10,19 @@ The Makefile is tested with OS X only but should work on Linux. It assumes you h
 
 Rename `config-example.lua` to `config.lua` and adjust to suit your needs.
 
+So fat this has been tested with NodeMCU 1.5.4.1 (integer firmware). I've seen the newer one having problems with skipping of network data. 
+
+Only regular modules are required in your firmware (HTTP and JSON parsing are done in Lua):
+
+- bit
+- file
+- gpio
+- net
+- node
+- struct
+- tmr
+- wifi
+
 ## Printer
 
 Any stock thermal printer should work here, like the ones sold by Adafruit. And as always they have great docs here: https://cdn-learn.adafruit.com/downloads/pdf/mini-thermal-receipt-printer.pdf
@@ -22,12 +35,12 @@ https://aliexpress.com/item/JP-QR203-58mm-Mini-Embedded-Receipt-Thermal-Printer-
 
 Name on the front: GOOJPRT
 
-TTL connector wires:
+TTL connector wires (from left to right when looking at the PCB so the reset button in the top right corner):
 
         BLACK  - GND
         RED    - VCC
-        YELLOW - RX (i.e. data from the controller to the printer)
-        GREEN  - perhaps TX, though was not able to get anything back from the printer.
-        BLUE   - sort of a CTS signal, 0 if the printer ready, 1 if we need to wait.
+        YELLOW - RX (i.e. the data coming from the controller to the printer here).
+        GREEN  - not sure, perhaps TX but could not confirm.
+        BLUE   - sort of a BUSY signal: LOW when the printer is ready to accept incoming data; HIGH otherwise.
 
 See `./doc/escpos.pdf` on some of the escape commands supported.
