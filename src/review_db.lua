@@ -1,18 +1,19 @@
+package.loaded["review_db"] = nil
+
+-- Names of the index and content files for the given DB name.
 local file_names = function(name)
     return name .. ".index", name .. ".content"
 end
 
--- True if the DB with the given name exists.
+-- True, if the DB with the given name exists.
 local exists = function(name)
     local index_file_name, content_file_name = file_names(name)
     return file.exists(index_file_name) and file.exists(content_file_name)
 end
 
---[[ 
-    Moves the DB with name from_name to one with to_name. 
-    If there is a DB with to_name already, then it will be replaced. 
-    Returns true, of succeeded.
-]]--
+-- Moves the DB with name from_name to the one with to_name. 
+-- If there is a DB with to_name already, then it will be replaced. 
+-- Returns true, of succeeded.
 local move = function(from_name, to_name)
     local from_index, from_content = file_names(from_name)
     local to_index, to_content = file_names(to_name)
@@ -22,30 +23,30 @@ local move = function(from_name, to_name)
 end
 
 --[[
-    Opens the review DB with the given name in 'reader' or 'writer' mode, the instance has the following methods:
+    Opens a review DB with the given name either in 'reader' or 'writer' modes. 
+    
+    The instance returned has the following methods:
     
     db:close() — closes the DB.
-    db:has_error() — true, if there was an error writing or reading the DB.
+    db:error() — non-nil, if there was an error writing or reading the DB.
     
     In 'writer' mode:
-    - db:write(review) — writes the given review into the DB (available in the 'writer' modd.
+    - db:write(review) — writes the given review to the DB.
     
     In 'reader' mode:
-    - db:reset() — resets the next review cursor into the beginning of the file.
+    - db:reset() — resets the next review cursor to the beginning of the file.
     - db:read(all) — reads the next review from the file; 
         if all is true, then all the fields are returned (pos, id, rating, author, title, body); 
         otherwise only pos, id, and rating are available.
-    - db:find_by_id(id) — returns partial review with the given ID or nil if the review was not found or an error occurred.
+    - db:find_by_id(id, all) — returns a review with the given ID or `nil` if the review was not found or an error occurred. A full review is returned if `all` parameter is true.
 ]]--
 local new = function(mode, name)
-            
-    package.loaded["review_db"] = nil
-    
-    local self = {}
     
     assert(mode == 'reader' or mode == 'writer')
     assert(name ~= nil and type(name) == 'string')        
-            
+    
+    local self = {}
+                
     local index_file = nil
     local content_file = nil
     local error = false
@@ -72,10 +73,10 @@ local new = function(mode, name)
     if mode == 'writer' then
         file_mode = "w+"
     else
-        file_mode = "r"
+        file_mode = "r+"
     end
     
-    local index_file = file.open(index_file_name, file_mode)        
+    local index_file = file.open(index_file_name, file_mode)
     if not index_file then 
         log("could not open the index file '%s'", name)
         return nil
@@ -89,10 +90,10 @@ local new = function(mode, name)
             return nil
         end
     else
-        -- Will open is lazily when in the reader mode.
+        -- In the reader mode we'll open the content file only when required.
     end
 
-    self.has_error = function(_self)
+    self.error = function(_self)
         return error
     end
     
@@ -114,7 +115,8 @@ local new = function(mode, name)
         end
     end
     
-    local index_format = "<! LB L LH LH LH"
+    local index_header_format = "<! H"
+    local index_format = index_header_format .. "LB L LH LH LH"
     
     if mode == 'writer' then 
                        
@@ -153,19 +155,14 @@ local new = function(mode, name)
                 return false 
             end
 
-            --[[
-            local hasher = crypto.new_hash("SHA1")
-            -- Don't care about changes in the author field, only title/content
-            hasher:update(review.title)
-            hasher:update(review.content)
-            local digest = hasher:finalize()
-            ]]--
-            
             local digest = hash(review.title) + hash(review.content)        
+            
+            local flags = 0
                     
             -- Then the index.
             local record = struct.pack(
                 index_format, 
+                flags,
                 tonumber(review.id), tonumber(review.rating), 
                 digest,
                 title_offset, title_len,
@@ -214,12 +211,25 @@ local new = function(mode, name)
             return content_file:read(len)
         end
         
-        -- Full review for a partial one.
-        self.full_review = function(_self, review)
-            return _self:read_at(review.pos, true)
+        -- Writes the updated flags for the corresponding review back to the file.
+        -- (It's a bit illogical to have this in the reader, but it's not good for the writer either...)
+        self.update = function(_self, review)
+            
+            if index_file:seek('set', review.pos * index_record_size) == nil then                    
+                fail(string.format("could not seek a header record at %d in order to update it", position))
+                return false
+            end
+            
+            local record = struct.pack(index_header_format, review.flags)
+            if not index_file:write(record) then 
+                fail("could not update an index record")
+                return false 
+            end
+            
+            return true
         end
 
-        -- A partial or full review at a given position. 
+        -- A partial or full review at the given position. 
         self.read_at = function(_self, position, all)
             
             if position >= total_records then 
@@ -243,12 +253,14 @@ local new = function(mode, name)
                 return nil
             end
                         
-            local review_id, review_rating, digest,
+            local flags, 
+                review_id, review_rating, 
+                digest,
                 title_offset, title_len,
                 author_offset, author_len,
                 body_offset, body_len = struct.unpack(index_format, record)
         
-            local result = { pos = position, id = review_id, rating = review_rating, digest = digest }
+            local result = { flags = flags, pos = position, id = review_id, rating = review_rating, digest = digest }
         
             if all then
                 result.title = read_content(title_offset, title_len)
@@ -263,10 +275,16 @@ local new = function(mode, name)
             return result
         end
         
+        -- Full review for a partial one.
+        self.full_review = function(_self, review)
+            return _self:read_at(review.pos, true)
+        end        
+        
         -- Reads the next review. 
         -- If `all` parameter is true, then all the fields are returned; otherwise the returned review is partial
         -- (has only `id`, `rating` and two service fields, `pos` and ` digest`).
-        -- The contents of a partial review can be fetched by passing the `pos` to `read_at` method.
+        -- The contents of a partial review can be fetched by passing the `pos` to `read_at` method 
+        -- or by passing the partial review to full_review() method.
         self.read = function(_self, all)
             
             if error then return nil end 
