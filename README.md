@@ -10,7 +10,7 @@ The Makefile is tested with OS X only but should work on Linux. It assumes you h
 
 Rename `config-example.lua` to `config.lua` and adjust to suit your needs.
 
-So fat this has been tested with NodeMCU 1.5.4.1 (integer firmware). I've seen the newer one having problems with skipping of network data. 
+So far this has been tested with NodeMCU 1.5.4.1 (integer firmware). I've seen the newer one having problems with skipping of network data. 
 
 Only regular modules are required in your firmware (HTTP and JSON parsing are done in Lua):
 
