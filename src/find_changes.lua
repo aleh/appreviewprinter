@@ -1,5 +1,5 @@
 local function log(message, ...)
-    print(string.format("diff: " .. message, ...))
+    print(string.format("find_changes: " .. message, ...))
 end
 
 -- How many changed reviews we can print at once.
