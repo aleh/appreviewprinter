@@ -115,7 +115,7 @@ enter_refreshing = function()
     
     set_state('refreshing')
     
-    local request = _require("uhttp").request.new()
+    local request = _require("uhttp_request").new()
     log_heap("required uhttp")
     
     local feed = _require("config").feed
