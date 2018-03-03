@@ -155,7 +155,7 @@ enter_parsing = function()
             log("Done parsing the feed file")                
             enter_processing_changes()
         else
-            log("Failed parsing the feed file")
+            log("Failed parsing the feed file: %s", error)
             enter_sleeping(false)
         end
     end)
@@ -186,12 +186,14 @@ enter_printing = function(reviews)
     
     set_state('printing')
     
-    _require("printer"):print_reviews(reviews, function(error)
+    _require("printer"):print_updated(3, function(error)
+        
         if error then
-            log("Failed to print: %s", error)
+            log("Failed to print updated reviews: %s", error)
         else
-            log("Done printing")
+            log("Done printing updated reviews")
         end
+        
         enter_sleeping(error == nil)
     end)      
 end

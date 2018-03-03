@@ -62,8 +62,8 @@ local _submit = function(lines, callback)
                 retry_counter = 0
 
                 local line = lines[line_index];
-                usart:write(line .. "\n", function()
-                    log("Sent line #%d, %d byte(s)", line_index, line:len() + 1)
+                usart:write(line .. "\r\n", function()
+                    log("Sent line #%d, %d byte(s)", line_index, line:len() + 2)
                     line_index = line_index + 1
                     
                     if line_interval > 0 then
@@ -76,18 +76,23 @@ local _submit = function(lines, callback)
             else
 
                 if retry_counter >= max_retry_counter then
-                    log("Still busy, giving up")
+                    
+                    log("Still not available, giving up")
+                    
                     if line_index == 0 then
-                        did_finish("the printer is stuck")
-                    else
                         did_finish("the printer is not available")
+                    else
+                        did_finish("the printer is stuck")
                     end
+                    
                 else
+                    
                     if retry_counter == 0 then 
-                        log("The printer is busy, will retry a couple of times...")
+                        log("The printer is not available, will retry a couple of times just in case it's busy...")
                     end
                     
                     retry_counter = retry_counter + 1
+                    
                     tmr.create():alarm(retry_interval, tmr.ALARM_SINGLE, function() 
                         node.task.post(0, submit_next_line)
                     end)
@@ -99,112 +104,142 @@ local _submit = function(lines, callback)
     node.task.post(0, submit_next_line)
 end
 
-return {
-        
-    -- Prints partial reviews in the given table.
-    print_reviews = function(self, callback)
-        
-        if #reviews == 0 then
-            log("No reviews to print")
-            callback(nil)
-            return
+-- Prints a single partial review from the given DB which should be open for reading.
+local _print_review = function(db, review, callback)
+    
+    log("Going to print review #%d", review.id)
+    
+    local r = db:full_review(review)
+    if not r then
+        callback(string.format("could not fetch the contents of the review #%d", review.id))
+        return
+    end
+
+    -- Formatting in the next cycle to make sure we have plenty of time.
+    node.task.post(0, function()
+
+        local doc = _require("printer_doc")
+    
+        doc:add_text("\n")
+
+        -- Rating and title.
+        local stars = function(n)
+            local r = ""
+            for i = 1, n do r = r .. "*" end
+            for i = n + 1, 5 do r = r .. "·" end
+            return r
         end
+        doc:with_emphasis(function()
+            doc:add_text(stars(r.rating))
+            doc:add_text(" ")
+            doc:add_text(r.title)
+        end)
+        doc:add_text("\n")
+    
+        -- Author.
+        doc:with_small_font(function()
+            doc:add_text(string.format("#%d, by ", r.id))
+            doc:add_text(r.author)
+            doc:add_text("\n")
+        end)
         
-        log("Going to print %d review(s)", #reviews)
+        -- Body.
+        doc:with_small_font(function()
+            doc:add_text("\n")
+            doc:add_text(r.content .. "\n")
+        end)
+    
+        doc:add_text("\n---\n")
+        doc:add_text("\n")
+        doc:add_text("\n")
+    
+        local lines = doc:finish()
+
+        _submit(
+            lines,
+            function (error)
+                if error then
+                    callback(string.format("could not print review #%d: %s", r.id, error))
+                else
+                    log("Done printing #%d", review.id)
+                    callback(nil)
+                end
+            end
+        )
+    end)
+end
+
+return {
+    
+    -- Finds up to max_reviews from the database having 'updated' flag set. 
+    -- Once a review is successfully printed, it's 'updated' flag is reset.
+    print_updated = function(self, max_reviews, callback)
+        
+        log("Going to print up to %d updated reviews", max_reviews)
         
         local db = _require("review_db").new("reader", "reviews")
         if not db then
-            callback("Could not open the review DB")
+            callback("could not open the review DB")
             return
         end
-        
-        log_heap("opened review reader")    
-        
-        local reviews_printed = 0
+
+        local total_printed = 0
         
         local did_finish = function(error)
+            
+            if not error then
+                log("Done printing updated review(s). Total: %d", total_printed)
+            end
             
             if db then 
                 db:close() 
                 db = nil
             end
             
-            if not error then
-                log("Successfully printed %d review(s)", reviews_printed)
-            end
-            
             callback(error)
         end
-        
-        local next_review_index = 1
-        
-        local doc = _require("printer_doc")        
                 
-        local print_next
-        print_next = function()
-        
-            if next_review_index > #reviews then
+        local check_next
+        check_next = function()
+            
+            if total_printed >= max_reviews then
+                log("Printed %d reviews, enough for now", max_reviews)
                 did_finish(nil)
-                return
             end
             
-            local review = reviews[next_review_index]
-            next_review_index = next_review_index + 1
-            
-            local r = db:full_review(review)
-            if not r then
-                did_finish(string.format("could not fetch the contents of the review #%d", review.id))
-                return
-            end
-            
-            doc:add_text("\n")
-
-            local stars = function(n)
-                local r = ""
-                for i = 1, n do r = r .. "*" end
-                for i = n + 1, 5 do r = r .. "·" end
-                return r
-            end
-            doc:with_emphasis(function()
-                doc:add_text(stars(r.rating))
-                doc:add_text(" ")
-                doc:add_text(r.title)
-            end)
-            doc:add_text("\n")
-            
-            doc:with_small_font(function()
-                doc:add_text(string.format("#%d, by ", r.id))
-                doc:add_text(r.author)
-                doc:add_text("\n")
-            end)
-            
-            node.task.post(0, function()
-            
-                doc:with_small_font(function()
-                    doc:add_text("\n")
-                    doc:add_text(r.content .. "\n")
-                end)
-            
-                doc:add_text("\n---\n")
-                doc:add_text("\n\n")
-            
-                local lines = doc:finish()
-
-                _submit(
-                    lines,
-                    function (error)
+            local r = db:read(false)
+            if not r then             
+                if db:error() then
+                    did_finish(string.format("could read the next review: %s", db:error()))
+                else
+                    did_finish(nil)
+                end
+            else
+                -- Check if the review has 'updated' flag set (bit 0).
+                if bit.band(r.flags, 1) == 1 then
+                    -- Yes, let's print it out.
+                    _print_review(db, r, function(error)
                         if error then
-                            did_finish(string.format("could not print review #%d: %s", review.id, error))
+                            did_finish(string.format("could not print review #%d", r.id))
                         else
-                            log("Done printing #%d", review.id)
-                            reviews_printed = reviews_printed + 1
-                            node.task.post(0, print_next)
+                            -- Let's clear the 'updated' flag, so we know we don't need to print it next time.
+                            r.flags = bit.band(r.flags, bit.bnot(1))
+                            if db:update(r) then
+                                log("Cleared 'updated' flag for just printed review #%d", r.id)
+                                total_printed = total_printed + 1
+                                node.task.post(0, check_next)
+                            else
+                                did_finish(string.format("Could not clear 'updated' flag for just printed review #%d", r.id))
+                            end
                         end
-                    end
-                )
-            end)
+                    end)
+                else           
+                    -- No, let's check the next one. 
+                    node.task.post(0, check_next)
+                end
+            end
         end
         
-        node.task.post(0, print_next)
-    end    
+        node.task.post(0, check_next)
+    end   
 }

@@ -125,7 +125,7 @@ return {
             if error then
                 callback(error)
             else
-                callback(nil, reviews_to_print)
+                callback(nil)
             end
         end
                         
@@ -140,15 +140,15 @@ return {
                 did_finish(nil)
                 return
             end
+               
+            log("#%d: %s", review.id, change)
                                 
             if change ~= 'none' then                 
                 review.flags = bit.bor(flags, 1)
                 something_changed = true
-                log("#%d: %s", review.id, change)
             else
                 review.flags = flags
-                log("#%d: no changes", review.id)
-            end
+            end            
                         
             if not new_db:update(review) then
                 did_finish("could not update flags of the review #%d", review.id)

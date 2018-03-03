@@ -2,8 +2,8 @@
 .SUFFIXES: .lua .d
 	
 # TODO: exclude config-example.lua and init.lua
-SRC=$(wildcard src/*.lua) ustream/uhttp.lua ustream/ujson.lua ustream/review_feed_parser.lua
-EXCLUDE=src/preupload.lua $(wildcard src/test_*.lua) $(wildcard src/*example*.lua)
+SRC=$(wildcard src/*.lua) $(wildcard ustream/*.lua)
+EXCLUDE=src/preupload.lua $(wildcard src/test_*.lua) $(wildcard ustream/test_*.lua) $(wildcard src/*example*.lua)
 FILES=$(filter-out $(EXCLUDE),$(SRC))
 
 DDIR=.deps
