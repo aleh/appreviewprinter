@@ -84,8 +84,22 @@ end
 local cp437_map =
 "\0\199\0\252\0\233\0\226\0\228\0\224\0\229\0\231\0\234\0\235\0\232\0\239\0\238\0\236\0\196\0\197\0\201\0\230\0\198\0\244\0\246\0\242\0\251\0\249\0\255\0\214\0\220\0\162\0\163\0\165\32\167\1\146\0\225\0\237\0\243\0\250\0\241\0\209\0\170\0\186\0\191\35\16\0\172\0\189\0\188\0\161\0\171\0\187\37\145\37\146\37\147\37\2\37\36\37\97\37\98\37\86\37\85\37\99\37\81\37\87\37\93\37\92\37\91\37\16\37\20\37\52\37\44\37\28\37\0\37\60\37\94\37\95\37\90\37\84\37\105\37\102\37\96\37\80\37\108\37\103\37\104\37\100\37\101\37\89\37\88\37\82\37\83\37\107\37\106\37\24\37\12\37\136\37\132\37\140\37\144\37\128\3\177\0\223\3\147\3\192\3\163\3\195\0\181\3\196\3\166\3\152\3\169\3\180\34\30\3\198\3\181\34\41\34\97\0\177\34\101\34\100\35\32\35\33\0\247\34\72\0\176\34\25\0\183\34\26\32\127\0\178\37\160\0\160"
 
+-- A map with additional important characters that we can still show in cp347.
+local cp437_quick_map = {
+    -- Vertical quote for a Unicode apostrophe.
+    [0x2019] = 39,
+    -- Dumb quotation mark for left and right quotation marks.
+    [0x201C] = 34,
+    [0x201D] = 34,
+    -- Minus for different kind of dashes.
+    [0x2012] = 45,
+    [0x2013] = 45,
+    [0x2014] = 45,
+    [0x2015] = 45
+}
+
 -- CP437 character used instead of unknown Unicode codepoints.
-local unknown_char = 0x3F
+local unknown_char = 240
 
 -- Pick bit arithmetics module for NodeMCU or normal Lua.
 local _bit
@@ -108,7 +122,14 @@ local cp437 = function(text)
                 -- All ASCII-range codes are the same.
                 return b
             elseif b <= 0xFFFF then
-                -- For the 16-bit ones let's check with our map.
+                
+                -- For the 16-bit ones let's check with our maps.
+                
+                -- First with a quick one.
+                local ch = cp437_quick_map[b]
+                if ch then return ch end
+                
+                -- Then with the larger, but slower one.
                 local i = 1
                 local high = _bit.rshift(b, 8)
                 local low = _bit.band(b, 0xFF)
@@ -118,6 +139,7 @@ local cp437 = function(text)
                     end
                     i = i + 2
                 end
+                
                 -- Could not find it, unknown character.
                 return unknown_char
             else

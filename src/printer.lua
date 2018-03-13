@@ -135,35 +135,40 @@ local _print_review = function(db, review, callback)
             doc:add_text(r.title)
         end)
         doc:add_text("\n")
-    
+        
         -- Author.
         doc:with_small_font(function()
             doc:add_text(string.format("#%d, by ", r.id))
             doc:add_text(r.author)
-            doc:add_text("\n")
         end)
+        doc:empty_lines(1)
         
-        -- Body.
-        doc:with_small_font(function()
-            doc:add_text("\n")
-            doc:add_text(r.content .. "\n")
-        end)
-    
-        doc:add_text("\n---\n")
-        doc:add_text("\n")
-        doc:add_text("\n")
-    
-        local lines = doc:finish()
+        -- The body can be too large to process in a single chunk, so splitting it.
+        require("util").for_each_chunk(
+            r.content, 
+            64,
+            function(chunk)
+                doc:with_small_font(function()
+                    doc:add_text(chunk)
+                end)
+            end,
+            function()
+                
+                doc:add_text("\n---\n")
 
-        _submit(
-            lines,
-            function (error)
-                if error then
-                    callback(string.format("could not print review #%d: %s", r.id, error))
-                else
-                    log("Done printing #%d", review.id)
-                    callback(nil)
-                end
+                local lines = doc:finish()
+
+                _submit(
+                    lines,
+                    function (error)
+                        if error then
+                            callback(string.format("could not print review #%d: %s", r.id, error))
+                        else
+                            log("Done printing #%d", review.id)
+                            callback(nil)
+                        end
+                    end
+                )
             end
         )
     end)
