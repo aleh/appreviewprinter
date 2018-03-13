@@ -62,8 +62,8 @@ local _submit = function(lines, callback)
                 retry_counter = 0
 
                 local line = lines[line_index];
-                usart:write(line .. "\r\n", function()
-                    log("Sent line #%d, %d byte(s)", line_index, line:len() + 2)
+                usart:write(line .. "\n", function()
+                    log("Sent line #%d, %d byte(s)", line_index, line:len() + 1)
                     line_index = line_index + 1
                     
                     if line_interval > 0 then
