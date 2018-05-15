@@ -1,6 +1,9 @@
+-- App Store Review Printer.
+-- Copyright (C) 2018, Aleh Dzenisiuk. All rights reserved.
+
 return {
     
-    run = function(callback)
+    run = function(_self, callback)
         
         local log = function(message, ...)
             print(string.format("parsing: " .. message, ...))

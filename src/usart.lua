@@ -1,3 +1,6 @@
+-- App Store Review Printer.
+-- Copyright (C) 2018, Aleh Dzenisiuk. All rights reserved.
+
 -- Write-only software USART using the `gpio` module.
 
 return {

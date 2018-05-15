@@ -1,3 +1,6 @@
+-- App Store Review Printer.
+-- Copyright (C) 2018, Aleh Dzenisiuk. All rights reserved.
+
 package.loaded["review_db"] = nil
 
 -- Names of the index and content files for the given DB name.

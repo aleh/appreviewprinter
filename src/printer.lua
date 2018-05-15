@@ -1,3 +1,6 @@
+-- App Store Review Printer.
+-- Copyright (C) 2018, Aleh Dzenisiuk. All rights reserved.
+
 -- GPIO pin which is used to detect whether the printer is busy or can accept our data.
 local busy_pin = 5
 

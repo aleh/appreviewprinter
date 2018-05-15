@@ -1,3 +1,6 @@
+-- App Store Review Printer.
+-- Copyright (C) 2018, Aleh Dzenisiuk. All rights reserved.
+
 local function log(message, ...)
     print(string.format("find_changes: " .. message, ...))
 end

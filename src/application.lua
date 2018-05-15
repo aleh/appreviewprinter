@@ -1,3 +1,6 @@
+-- App Store Review Printer.
+-- Copyright (C) 2018, Aleh Dzenisiuk. All rights reserved.
+
 local log = function(message, ...)
     print(string.format("main: " .. message, ...))
 end

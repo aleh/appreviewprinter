@@ -30,6 +30,9 @@ Any stock thermal printer should work here, like the ones sold by Adafruit. And 
 Sparkfun also has related docs, though don't rely on all the commands available in every printer: 
 https://www.sparkfun.com/datasheets/Components/General/Driver%20board.pdf
 
+Nice intro on the typical ESC codes supported:
+https://mike42.me/blog/what-is-escpos-and-how-do-i-use-it
+
 Here is a link for a cheap 58mm one (turned out to be pretty narrow):
 https://aliexpress.com/item/JP-QR203-58mm-Mini-Embedded-Receipt-Thermal-Printer-Compatible-with-EML203/32653084570.html
 
