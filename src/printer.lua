@@ -4,10 +4,10 @@
 -- GPIO pin which is used to detect whether the printer is busy or can accept our data.
 local busy_pin = 5
 
--- GPIO pin which is used to send data to the printer.
+-- GPIO pin which is used to send the data to the printer.
 local tx_pin = 6
 
--- Max time ins ms the printer can be busy.
+-- Max time in milliseconds the printer can be busy.
 local printer_busy_timeout = 5 * 1000
 
 -- Milliseconds to wait between the lines.
@@ -117,13 +117,13 @@ local _print_review = function(db, review, callback)
         callback(string.format("could not fetch the contents of the review #%d", review.id))
         return
     end
-
+	
     -- Formatting in the next cycle to make sure we have plenty of time.
     node.task.post(0, function()
 
         local doc = _require("printer_doc")
-    
-        doc:add_text("\n")
+
+        doc:empty_lines(1)
 
         -- Rating and title.
         local stars = function(n)
@@ -151,6 +151,7 @@ local _print_review = function(db, review, callback)
             r.content, 
             64,
             function(chunk)
+                -- TODO: switching to the small font and back can cause the current output position to accumulate error. Set small font beforehand instead.
                 doc:with_small_font(function()
                     doc:add_text(chunk)
                 end)
@@ -180,7 +181,7 @@ end
 return {
     
     -- Finds up to max_reviews from the database having 'updated' flag set. 
-    -- Once a review is successfully printed, it's 'updated' flag is reset.
+    -- Once a review is successfully printed it's 'updated' flag is reset.
     print_updated = function(self, max_reviews, callback)
         
         log("Going to print up to %d updated reviews", max_reviews)
@@ -213,12 +214,13 @@ return {
             if total_printed >= max_reviews then
                 log("Printed %d reviews, enough for now", max_reviews)
                 did_finish(nil)
+				return
             end
             
             local r = db:read(false)
             if not r then             
                 if db:error() then
-                    did_finish(string.format("could read the next review: %s", db:error()))
+                    did_finish(string.format("could not read the next review: %s", db:error()))
                 else
                     did_finish(nil)
                 end

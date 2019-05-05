@@ -46,18 +46,19 @@ return {
             did_finish("Could not open feed file")
             return
         end
-        log_heap("feed file")        
+        log_heap("feed file")
                         
         parser = _require("review_feed_parser").new({
             review = function(p, a)
             
                 log("#%s", a.id)
-            
+				log_heap("feed file")
+								
                 if not review_db:write(a) then
-                    did_finish("Could not write a review into the db")
-                    return false
-                end
- 
+					did_finish("Could not write a review into the db")
+					return false
+				end
+				
                 return true
             end,
             error = function(p, message)
@@ -71,7 +72,7 @@ return {
                                 
         local process_line
         process_line = function()
-            local line = feed_file:read(256)
+            local line = feed_file:read(128)
             if line then
                 node.task.post(0, function() 
                     if parser:process(line) then

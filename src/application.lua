@@ -63,13 +63,22 @@ local set_state = function(new_state)
     state = new_state
     log("State: %s", state)
     log_heap()
+    
+    -- TODO: begin blinking a 'busy' pattern unless the state is 'idle'
 end
             
 --
--- Sleeping
+-- Idle mode. 
+-- Originally there was a sleep mode here, but not sure if handling button presses 
+-- will be convenient from the sleep mode.
 --
-local enter_sleeping = function(after_success)
+local enter_idle = function(after_success)
+
+    set_state('idle')
     
+    -- TODO: begin blinking an 'error' or 'success' patterns depending on after_success flag
+    
+    --[[
     local timeout
     if after_success then 
         timeout = 10
@@ -84,13 +93,14 @@ local enter_sleeping = function(after_success)
         log("Good night!")
         node.dsleep(timeout * 1000000, 4)    
     end)
+    ]]--
 end
 
--- Sort of forward declarations
+-- Sort of forward declarations, so upvalues are captured properly.
 local enter_refreshing, enter_parsing, enter_processing_changes, enter_printing
 
 --
--- Connecting
+-- Connecting to WiFi
 --
 local enter_connecting = function()
 
@@ -104,7 +114,7 @@ local enter_connecting = function()
                     enter_refreshing()
                 else
                     log("Could not activate the connection: %s", msg)
-                    enter_sleeping(false)
+                    enter_idle(false)
                 end
             end)
         end
@@ -112,7 +122,7 @@ local enter_connecting = function()
 end    
 
 --
--- Refreshing
+-- Fetching the JSON feed and saving it in a file to process later.
 --        
 enter_refreshing = function() 
     
@@ -121,12 +131,12 @@ enter_refreshing = function()
     local request = _require("uhttp_request").new()
     log_heap("required uhttp")
     
-    local feed = _require("config").feed
+    local feed_config = _require("config").feed
     
     request:download(
-        feed.host, 
-        feed.path,
-        feed.port,
+        feed_config.host, 
+        feed_config.path,
+        feed_config.port,
         "raw-feed.json",
         function(succeeded, message)
             request = nil
@@ -139,7 +149,7 @@ enter_refreshing = function()
                     enter_parsing()
                 else
                     log("Failed to refresh: %s", message)
-                    enter_sleeping(false)
+                    enter_idle(false)
                 end
             end)
         end
@@ -147,25 +157,25 @@ enter_refreshing = function()
 end
         
 --
--- Parsing the raw feed JSON file and putting the reviews from there into the new reviews DB.
+-- Parsing the feed JSON file and putting the reviews from there into the "new" reviews DB.
 --    
 enter_parsing = function()
     
     set_state('parsing')
     
-    _require("parse_feed_file").run(function(error)
+    _require("parse_feed_file"):run(function(error)
         if not error then
             log("Done parsing the feed file")                
             enter_processing_changes()
         else
             log("Failed parsing the feed file: %s", error)
-            enter_sleeping(false)
+            enter_idle(false)
         end
     end)
 end
 
 --
--- Looking for changes in the new DB compared to the old DB.
+-- Looking for changes in the "new" DB compared to the "old" one.
 -- 
 enter_processing_changes = function()
     
@@ -173,11 +183,12 @@ enter_processing_changes = function()
     
     _require("find_changes"):run(function(error, reviews)
         if error then
-            enter_sleeping(true)
+            enter_idle(true)
         else
-            node.task.post(0, function()
-                enter_printing(reviews)
-            end)
+			enter_idle(false)
+            -- node.task.post(0, function()
+            --    enter_printing(reviews)
+            -- end)
         end
     end)
 end
@@ -185,7 +196,7 @@ end
 --
 -- Printing out the reviews scheduled for printing.
 -- 
-enter_printing = function(reviews)
+enter_printing = function()
     
     set_state('printing')
     
@@ -197,8 +208,31 @@ enter_printing = function(reviews)
             log("Done printing updated reviews")
         end
         
-        enter_sleeping(error == nil)
+        enter_idle(error == nil)
     end)      
 end
 
-enter_connecting()
+--
+-- Some globals allowing to trigger things from the "command line".
+--
+
+local check_busy = function()
+    if state ~= 'idle' then 
+        log("busy") 
+        return true 
+    else
+        return false
+    end
+end
+
+check = function()
+    if check_busy() then return end
+    enter_connecting()
+end
+
+print_new = function()
+    if check_busy() then return end
+    enter_printing()
+end
+
+-- enter_connecting()

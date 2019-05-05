@@ -3,29 +3,34 @@
 
 local self = {}
 
+if bit32 then bit = bit32 end
+
 local lines, line, col, max_cols
 
--- The current font mode for ESC ! sequence.
+-- The current font mode for the ESC ! sequence.
 local mode = 0
 
-local FONT_A_MAX_COLS = 31
-local FONT_B_MAX_COLS = 41
+local FONT_A_MAX_COLS = 30
+local FONT_B_MAX_COLS = 42
 
 self.begin = function(_self)
+    
     -- The array of completed lines.
     lines = {}
-    -- The current line incomplete line (not in the 'lines' array yet).
+    
+    -- The current incomplete line (not in the 'lines' array yet).
     line = ""
+    
     -- The index of the text column where the next printable character will be put.
     col = 0
-    -- The number of columns per line. 
-    -- On a 58mm printer, this is 32 with font A, 42 with font B.
-    -- TODO: make it a parameter here
+    
+    -- The number of columns per line for the current font, which is Font A after the initialization.
     max_cols = FONT_A_MAX_COLS
     
+    -- No emphasis or font changes turned on yet.
     mode = 0
     
-    -- Let's begin with a "reset all" escape sequence.
+    -- Let's begin with a "reset all".
     _self:_add_codes("\027@")
 end
 
@@ -41,10 +46,19 @@ self._newline = function(_self)
     col = 0
 end
 
+-- Moves to the new line unless we are already in the beginning of the line. 
+self._newline_if_needed = function(_self)
+    if line:len() > 0 then 
+        table.insert(lines, line)
+        line = ""
+        col = 0
+    end
+end
+
 -- Flushes the current line and returns an array of lines collected so far back, 
 -- resets the lines and the state of the document.
 self.finish = function(_self)
-    if line:len() > 0 then table.insert(lines, line) end
+    _self:_newline_if_needed()
     local result = lines
     _self:begin()
     return result
@@ -89,12 +103,12 @@ local cp437_map =
 
 -- A map with additional important characters that we can still show in cp347.
 local cp437_quick_map = {
-    -- Vertical quote for a Unicode apostrophe.
+    -- The vertical quote for a Unicode apostrophe.
     [0x2019] = 39,
-    -- Dumb quotation mark for left and right quotation marks.
+    -- The dumb quotation mark for the left and right quotation marks.
     [0x201C] = 34,
     [0x201D] = 34,
-    -- Minus for different kind of dashes.
+    -- The minus for different kind of dashes.
     [0x2012] = 45,
     [0x2013] = 45,
     [0x2014] = 45,
@@ -167,12 +181,12 @@ self.with_small_font = function(_self, callback)
     local prev_max_cols = max_cols
     max_cols = FONT_B_MAX_COLS
     
-    -- Let's try to recalculate the current position in case somebody will use this in the middle of the string.
+    -- Let's try to recalculate the current position in case somebody will use this in the middle of a string.
     col = (col * max_cols + prev_max_cols - 1) / prev_max_cols
 
     _self:_with_mode(1, callback)
     
-    -- Well, let's try to recalculate again, though precision is not going to be good.
+    -- Let's try to recalculate again, though precision is not going to be good.
     col = (col * prev_max_cols + max_cols - 1) / max_cols
 
     max_cols = prev_max_cols
@@ -181,6 +195,21 @@ end
 -- Sets the bold font mode, calls the given function and returns back to the normal font mode.
 self.with_emphasis = function(_self, callback)
     _self:_with_mode(8, callback)
+end
+
+-- Sets alignment to center, calls the given function and restores the alignment back.
+self.centered = function(_self, callback)
+    _self:_add_codes("\027a\001")
+    callback()
+    _self:_add_codes("\027a\000")
+end
+
+-- Feeds forward the specified number of lines.
+self.empty_lines = function(_self, N)
+    _self:_newline_if_needed()
+    for i = 1, N do
+        _self:_add_codes("\n")
+    end
 end
         
 -- Adds one or more paragraphs of UTF-8 encoded text performing simple word wrapping. 
@@ -212,7 +241,7 @@ self.add_text = function(_self, _text)
         
         if state == 'line-start' then
             if b <= 32 then
-                -- A space or a newline — ignoring everything except for newlines (to allow empty lines).
+                -- Ignoring all control codes in the beginning of the line except for LF (to allow empty lines).
                 if b == 10 then _self:_newline() end
             else
                 -- A non-space, our line begins.

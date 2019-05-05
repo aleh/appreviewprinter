@@ -303,7 +303,7 @@ local new = function(mode, name)
         end
         
         -- Returns a review by its id or nil it could not find one. Linear search.
-        -- Pass `true` for the `all` parameter to get all the content fields as well.
+        -- Pass `true` for the `all` parameter to get all the fields, not only the header.
         self.find_by_id = function(_self, id, all)
             self:reset()
             while true do
