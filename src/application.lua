@@ -41,30 +41,42 @@ dump = function(t) for k, v in pairs(t) do print(k, v) end end
 local code, info = node.bootreason()
 local reasons = {
     [0] = "power-on",
-    [1] = "hardware watchdog reset",
+    [1] = "h/w watchdog",
     [2] = "exception reset",
-    [3] = "software watchdog reset",
-    [4] = "software restart",
-    [5] = "wake from deep sleep",
+    [3] = "s/w watchdog",
+    [4] = "s/w restart",
+    [5] = "deep sleep wake up",
     [6] = "ext reset"
 }
-log("Boot reason: %s", reasons[info] or "unknown event")
+log("Boot reason: %s", reasons[info] or info or "unknown")
 reasons = nil
 
 -- Let's see how much heap we begin with.
 log_heap()
     
 --
--- The general state of the application, used only for diagnostics now.
+-- The general state of the application.
 --
 local state = 'idle'
+local substate = false
 
-local set_state = function(new_state)
+-- Not using the 'led' module as memory budget is almost zero.
+local busy_led_pin = 3
+
+gpio.mode(busy_led_pin, gpio.OUTPUT)
+
+local set_state = function(new_state, new_substate)
+
     state = new_state
+	substate = new_substate
     log("State: %s", state)
     log_heap()
     
-    -- TODO: begin blinking a 'busy' pattern unless the state is 'idle'
+	if state ~= 'idle' then
+		gpio.write(busy_led_pin, gpio.LOW)		
+	else
+		gpio.write(busy_led_pin, gpio.HIGH)
+	end
 end
             
 --
@@ -74,7 +86,7 @@ end
 --
 local enter_idle = function(after_success)
 
-    set_state('idle')
+    set_state('idle', after_success)
     
     -- TODO: begin blinking an 'error' or 'success' patterns depending on after_success flag
     
@@ -95,6 +107,8 @@ local enter_idle = function(after_success)
     end)
     ]]--
 end
+
+enter_idle(true)
 
 -- Sort of forward declarations, so upvalues are captured properly.
 local enter_refreshing, enter_parsing, enter_processing_changes, enter_printing
@@ -213,7 +227,7 @@ enter_printing = function()
 end
 
 --
--- Some globals allowing to trigger things from the "command line".
+-- Globals allowing to trigger main actions from the terminal.
 --
 
 local check_busy = function()
