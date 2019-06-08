@@ -34,7 +34,7 @@ _require = function(s)
     return nil
 end
 
--- Another small global dumping tables which is handy while debugging things interactively.
+-- Another small global dumping tables. Handy while debugging things interactively.
 dump = function(t) for k, v in pairs(t) do print(k, v) end end
 
 -- It's useful to know why the device has been woken up.
@@ -142,7 +142,7 @@ enter_refreshing = function()
     
     set_state('refreshing')
     
-    local request = _require("uhttp_request").new()
+    local request = _require("uhttp_request")()
     log_heap("required uhttp")
     
     local feed_config = _require("config").feed

@@ -48,8 +48,8 @@ return {
         end
         log_heap("feed file")
                         
-        parser = _require("review_feed_parser").new({
-            review = function(p, a)
+        parser = _require("review_feed_parser")(
+			function(p, a) -- review
             
                 log("#%s", a.id)
 				log_heap("feed file")
@@ -61,13 +61,13 @@ return {
 				
                 return true
             end,
-            error = function(p, message)
-                did_finish(message)
-            end,
-            done = function(p)
+			function(p) -- done
                 did_finish()
+            end,
+			function(p, message) -- error
+                did_finish(message)
             end
-        })
+        )
         log_heap("review feed parser")
                                 
         local process_line
