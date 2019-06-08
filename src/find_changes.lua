@@ -110,57 +110,54 @@ local next = function()
     end
 end
 
-return {
+return function(callback)
         
-    run = function(_self, callback)
-        
-        if not open() then
-            callback("could not open the databases")
+    if not open() then
+        callback("could not open the databases")
+        return
+    end
+    
+    log_heap("opened DBs")
+    
+    local something_changed = false
+    
+    local did_finish = function(error)            
+        close(something_changed and error == nil)
+        if error then
+            callback(error)
+        else
+            callback(nil)
+        end
+    end
+                    
+    local process_next_change
+    process_next_change = function()
+    
+        local change, review, flags = next()
+        if change == 'error' then
+            did_finish("could not fetch the next review")
+            return
+        elseif change == 'end' then 
+            did_finish(nil)
             return
         end
+           
+        log("#%d: %s", review.id, change)
+                            
+        if change ~= 'none' then                 
+            review.flags = bit.bor(flags, 1)
+            something_changed = true
+        else
+            review.flags = flags
+        end            
+                    
+        if not new_db:update(review) then
+            did_finish("could not update flags of the review #%d", review.id)
+            return
+        end            
         
-        log_heap("opened DBs")
-        
-        local something_changed = false
-        
-        local did_finish = function(error)            
-            close(something_changed and error == nil)
-            if error then
-                callback(error)
-            else
-                callback(nil)
-            end
-        end
-                        
-        local process_next_change
-        process_next_change = function()
-        
-            local change, review, flags = next()
-            if change == 'error' then
-                did_finish("could not fetch the next review")
-                return
-            elseif change == 'end' then 
-                did_finish(nil)
-                return
-            end
-               
-            log("#%d: %s", review.id, change)
-                                
-            if change ~= 'none' then                 
-                review.flags = bit.bor(flags, 1)
-                something_changed = true
-            else
-                review.flags = flags
-            end            
-                        
-            if not new_db:update(review) then
-                did_finish("could not update flags of the review #%d", review.id)
-                return
-            end            
-            
-            node.task.post(0, process_next_change)
-        end
-        
-        node.task.post(0, process_next_change)        
+        node.task.post(0, process_next_change)
     end
-}
+    
+    node.task.post(0, process_next_change)        
+end

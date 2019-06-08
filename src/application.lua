@@ -35,7 +35,11 @@ _require = function(s)
 end
 
 -- Another small global dumping tables. Handy while debugging things interactively.
-dump = function(t) for k, v in pairs(t) do print(k, v) end end
+dump = function(t) 
+	for k, v in pairs(t) do 
+		print(k, v)
+	end 
+end
 
 -- It's useful to know why the device has been woken up.
 local code, info = node.bootreason()
@@ -120,7 +124,7 @@ local enter_connecting = function()
 
     set_state('connecting')
     
-    _require("connection").activate(
+    _require("connect")(
         _require("config").networks,
         function(succeeded, msg)
             node.task.post(0, function()
@@ -177,7 +181,7 @@ enter_parsing = function()
     
     set_state('parsing')
     
-    _require("parse_feed_file"):run(function(error)
+    _require("parse_feed_file")(function(error)
         if not error then
             log("Done parsing the feed file")                
             enter_processing_changes()
@@ -195,7 +199,7 @@ enter_processing_changes = function()
     
     set_state('processing')
     
-    _require("find_changes"):run(function(error, reviews)
+    _require("find_changes")(function(error, reviews)
         if error then
             enter_idle(true)
         else
