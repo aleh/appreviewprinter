@@ -1,0 +1,314 @@
+EESchema Schematic File Version 4
+EELAYER 26 0
+EELAYER END
+$Descr A4 11693 8268
+encoding utf-8
+Sheet 1 1
+Title ""
+Date ""
+Rev ""
+Comp ""
+Comment1 ""
+Comment2 ""
+Comment3 ""
+Comment4 ""
+$EndDescr
+$Comp
+L aleh:NodeMCU U1
+U 1 1 5E231471
+P 2750 3250
+F 0 "U1" H 2750 4925 50  0000 C CNN
+F 1 "NodeMCU Ver 0.1 (LoLin)" H 2750 4834 50  0000 C CNN
+F 2 "" H 2750 3250 50  0001 C CNN
+F 3 "" H 2750 3250 50  0001 C CNN
+	1    2750 3250
+	1    0    0    -1  
+$EndComp
+$Comp
+L Connector:Barrel_Jack J1
+U 1 1 5E2315B5
+P 1300 1800
+F 0 "J1" H 1355 2125 50  0000 C CNN
+F 1 "12V DC" H 1355 2034 50  0000 C CNN
+F 2 "" H 1350 1760 50  0001 C CNN
+F 3 "~" H 1350 1760 50  0001 C CNN
+	1    1300 1800
+	1    0    0    -1  
+$EndComp
+$Comp
+L aleh:ThermalPrinter U2
+U 1 1 5E231D9D
+P 2750 4450
+F 0 "U2" H 2750 5215 50  0000 C CNN
+F 1 "Thermal Printer (GOOJPRT)" H 2750 5124 50  0000 C CNN
+F 2 "" H 2850 4450 50  0001 C CNN
+F 3 "" H 2850 4450 50  0001 C CNN
+	1    2750 4450
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	3200 1800 3250 1800
+Wire Wire Line
+	3250 1800 3250 1500
+Wire Wire Line
+	3250 1500 2200 1500
+Wire Wire Line
+	2200 1500 2200 3000
+Wire Wire Line
+	2200 3000 2300 3000
+NoConn ~ 2300 1800
+NoConn ~ 2300 1900
+NoConn ~ 2300 2000
+NoConn ~ 2300 2100
+NoConn ~ 2300 2200
+NoConn ~ 2300 2300
+NoConn ~ 2300 2400
+NoConn ~ 2300 2500
+NoConn ~ 2300 2600
+NoConn ~ 2300 2700
+NoConn ~ 2300 2800
+NoConn ~ 2300 2900
+NoConn ~ 3200 1900
+NoConn ~ 3200 2300
+NoConn ~ 3200 2400
+NoConn ~ 3200 2800
+NoConn ~ 3200 2900
+NoConn ~ 3200 3000
+$Comp
+L Switch:SW_Push SW1
+U 1 1 5E234242
+P 6000 2750
+F 0 "SW1" H 6000 3035 50  0000 C CNN
+F 1 "SW_Push" H 6000 2944 50  0000 C CNN
+F 2 "" H 6000 2950 50  0001 C CNN
+F 3 "" H 6000 2950 50  0001 C CNN
+	1    6000 2750
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:LED_CRGB D1
+U 1 1 5E2342FF
+P 6000 1900
+F 0 "D1" H 6000 1433 50  0000 C CNN
+F 1 "LED_CRGB" H 6000 1524 50  0000 C CNN
+F 2 "" H 6000 1850 50  0001 C CNN
+F 3 "~" H 6000 1850 50  0001 C CNN
+	1    6000 1900
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	6200 1900 6350 1900
+Wire Wire Line
+	6350 2750 6200 2750
+NoConn ~ 3200 3200
+$Comp
+L Device:R R1
+U 1 1 5E237FEF
+P 3700 1750
+F 0 "R1" V 3493 1750 50  0000 C CNN
+F 1 "2K2" V 3584 1750 50  0000 C CNN
+F 2 "" V 3630 1750 50  0001 C CNN
+F 3 "~" H 3700 1750 50  0001 C CNN
+	1    3700 1750
+	0    1    1    0   
+$EndComp
+$Comp
+L Device:R R2
+U 1 1 5E238043
+P 3700 2100
+F 0 "R2" V 3493 2100 50  0000 C CNN
+F 1 "2K" V 3584 2100 50  0000 C CNN
+F 2 "" V 3630 2100 50  0001 C CNN
+F 3 "~" H 3700 2100 50  0001 C CNN
+	1    3700 2100
+	0    1    1    0   
+$EndComp
+$Comp
+L Device:R R3
+U 1 1 5E238095
+P 3700 2450
+F 0 "R3" V 3493 2450 50  0000 C CNN
+F 1 "270" V 3584 2450 50  0000 C CNN
+F 2 "" V 3630 2450 50  0001 C CNN
+F 3 "~" H 3700 2450 50  0001 C CNN
+	1    3700 2450
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	6350 1900 6350 2750
+$Comp
+L Connector:Conn_01x05_Male J3
+U 1 1 5E23BC17
+P 4900 2200
+F 0 "J3" H 5006 2578 50  0000 C CNN
+F 1 "01x05" H 5006 2487 50  0000 C CNN
+F 2 "" H 4900 2200 50  0001 C CNN
+F 3 "~" H 4900 2200 50  0001 C CNN
+	1    4900 2200
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	5800 1700 5600 1700
+Wire Wire Line
+	5600 1700 5600 2000
+Wire Wire Line
+	5800 1900 5650 1900
+Wire Wire Line
+	5650 1900 5650 2100
+Wire Wire Line
+	5800 2100 5700 2100
+Wire Wire Line
+	5700 2100 5700 2200
+Wire Wire Line
+	5500 2400 5500 2950
+Wire Wire Line
+	5500 2950 6350 2950
+Wire Wire Line
+	6350 2950 6350 2750
+Connection ~ 6350 2750
+Wire Wire Line
+	5100 2000 5600 2000
+Wire Wire Line
+	5100 2100 5650 2100
+Wire Wire Line
+	5100 2200 5700 2200
+Wire Wire Line
+	5500 2400 5100 2400
+Wire Notes Line
+	6500 1300 6500 3100
+Wire Notes Line
+	6500 3100 5350 3100
+Wire Notes Line
+	5350 3100 5350 1300
+Wire Notes Line
+	5350 1300 6500 1300
+Wire Wire Line
+	3300 3950 3350 3950
+Wire Wire Line
+	3350 3950 3350 3100
+Wire Wire Line
+	3350 3100 3200 3100
+Wire Wire Line
+	3300 4150 3400 4150
+Wire Wire Line
+	3200 2600 3400 2600
+Wire Wire Line
+	3400 2600 3400 4150
+Wire Wire Line
+	3200 2500 3450 2500
+Wire Wire Line
+	3450 2500 3450 4350
+Wire Wire Line
+	3450 4350 3300 4350
+Wire Wire Line
+	3550 2100 3200 2100
+Wire Wire Line
+	3550 2450 3450 2450
+Wire Wire Line
+	3450 2450 3450 2200
+Wire Wire Line
+	3450 2200 3200 2200
+Wire Wire Line
+	3200 2000 3450 2000
+Wire Wire Line
+	3450 2000 3450 1750
+Wire Wire Line
+	3450 1750 3550 1750
+$Comp
+L Connector:Conn_01x05_Female J2
+U 1 1 5E25DF1C
+P 4400 2200
+F 0 "J2" H 4428 2226 50  0000 L CNN
+F 1 "01x05" H 4428 2135 50  0000 L CNN
+F 2 "" H 4400 2200 50  0001 C CNN
+F 3 "~" H 4400 2200 50  0001 C CNN
+	1    4400 2200
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	4000 2000 4000 1750
+Wire Wire Line
+	4000 1750 3850 1750
+Wire Wire Line
+	4000 2200 4000 2450
+Wire Wire Line
+	4000 2450 3850 2450
+Wire Wire Line
+	4000 2000 4200 2000
+Wire Wire Line
+	3850 2100 4200 2100
+Wire Wire Line
+	4000 2200 4200 2200
+Wire Wire Line
+	4200 2300 4050 2300
+Wire Wire Line
+	4050 2300 4050 2700
+Wire Wire Line
+	4050 2700 3200 2700
+$Comp
+L power:GND #PWR02
+U 1 1 5E2636BF
+P 4100 3200
+F 0 "#PWR02" H 4100 2950 50  0001 C CNN
+F 1 "GND" H 4105 3027 50  0000 C CNN
+F 2 "" H 4100 3200 50  0001 C CNN
+F 3 "" H 4100 3200 50  0001 C CNN
+	1    4100 3200
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	4100 3200 4100 2400
+Wire Wire Line
+	4100 2400 4200 2400
+Wire Wire Line
+	5800 2750 5600 2750
+Wire Wire Line
+	5600 2750 5600 2300
+Wire Wire Line
+	5600 2300 5100 2300
+Text Notes 5350 1250 0    50   ~ 0
+Button board
+$Comp
+L power:GND #PWR01
+U 1 1 5E26C67A
+P 1700 3200
+F 0 "#PWR01" H 1700 2950 50  0001 C CNN
+F 1 "GND" H 1705 3027 50  0000 C CNN
+F 2 "" H 1700 3200 50  0001 C CNN
+F 3 "" H 1700 3200 50  0001 C CNN
+	1    1700 3200
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	1600 1900 1700 1900
+Wire Wire Line
+	1700 1900 1700 3100
+Wire Wire Line
+	2300 3100 2100 3100
+Connection ~ 1700 3100
+Wire Wire Line
+	1700 3100 1700 3200
+Wire Wire Line
+	2200 3950 2100 3950
+Wire Wire Line
+	2100 3950 2100 3100
+Connection ~ 2100 3100
+Wire Wire Line
+	2100 3100 1700 3100
+Wire Wire Line
+	2200 4050 1900 4050
+Wire Wire Line
+	1900 4050 1900 1700
+Wire Wire Line
+	1900 1700 1600 1700
+Wire Notes Line
+	1000 1300 1000 3600
+Wire Notes Line
+	1000 3600 4650 3600
+Wire Notes Line
+	4650 3600 4650 1300
+Wire Notes Line
+	1000 1300 4650 1300
+Text Notes 1000 1250 0    50   ~ 0
+Main board
+$EndSCHEMATC
