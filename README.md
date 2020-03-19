@@ -2,7 +2,7 @@
 
 Lua-only firmware for an autonomous App Store review printer based on NodeMCU and a stock thermal printer.
 
-Note that it is still under development.
+![](picture.jpg "App Store Review Printer")
 
 ## Configuration
 
