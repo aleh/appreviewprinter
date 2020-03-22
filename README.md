@@ -1,6 +1,8 @@
 # App Store Review Printer
 
-Lua-only firmware for an autonomous App Store review printer based on NodeMCU and a stock thermal printer.
+Lua-only firmware for an autonomous App Store review printer based on NodeMCU and a common thermal printer part.
+
+It sits on your desk checking App Store RSS feed for your iOS app and prints new reviews when they arrive.
 
 ![](picture.jpg "App Store Review Printer")
 

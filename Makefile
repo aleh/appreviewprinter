@@ -12,7 +12,7 @@ DEPS=$(patsubst %.lua,%.d,$(patsubst %,$(DDIR)/%,$(FILES)))
 UPLOADER=nodemcu-uploader --timeout 10 --port /dev/tty.wchusbserial* 
 
 $(DDIR)/%.d: %.lua
-	luac -p $<
+	luac-5.1 -p $<
 	$(UPLOADER) upload --compile $<:$(notdir $<)
 	mkdir -p $(dir $@)
 	touch $@
