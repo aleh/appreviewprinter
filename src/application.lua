@@ -1,6 +1,21 @@
 -- App Store Review Printer.
 -- Copyright (C) 2018, Aleh Dzenisiuk. All rights reserved.
 
+-- A "busy" LED is the one that lights up when our state is not idle.
+local busy_led_pin = 2
+local ready_led_pin = 3
+local error_led_pin = 4
+
+-- A push button that can trigger checking.
+local check_button_pin = 7
+
+gpio.mode(busy_led_pin, gpio.OUTPUT)
+gpio.write(busy_led_pin, gpio.LOW)
+gpio.mode(ready_led_pin, gpio.OUTPUT)
+gpio.write(ready_led_pin, gpio.LOW)
+gpio.mode(error_led_pin, gpio.OUTPUT)
+gpio.write(error_led_pin, gpio.LOW)
+
 local log = function(message, ...)
     print(string.format("main: " .. message, ...))
 end
@@ -64,11 +79,6 @@ log_heap()
 local state = 'idle'
 local substate = false
 
--- Not using the 'led' module as memory budget is almost zero.
-local busy_led_pin = 3
-
-gpio.mode(busy_led_pin, gpio.OUTPUT)
-
 local set_state = function(new_state, new_substate)
 
     state = new_state
@@ -77,9 +87,20 @@ local set_state = function(new_state, new_substate)
     log_heap()
     
 	if state ~= 'idle' then
-		gpio.write(busy_led_pin, gpio.LOW)		
-	else
+		--~ busy_led.start_blinking()
 		gpio.write(busy_led_pin, gpio.HIGH)
+		gpio.write(ready_led_pin, gpio.LOW)
+		gpio.write(error_led_pin, gpio.LOW)
+	else
+		--~ busy_led.stop_blinking()
+		gpio.write(busy_led_pin, gpio.LOW)
+		if substate then
+			gpio.write(ready_led_pin, gpio.HIGH)
+			gpio.write(error_led_pin, gpio.LOW)
+		else
+			gpio.write(ready_led_pin, gpio.LOW)
+			gpio.write(error_led_pin, gpio.HIGH)
+		end
 	end
 end
             
@@ -117,6 +138,11 @@ enter_idle(true)
 -- Sort of forward declarations, so upvalues are captured properly.
 local enter_refreshing, enter_parsing, enter_processing_changes, enter_printing
 
+-- Not using the 'led' module as memory budget is almost zero.
+--~ busy_led = _require('led')(busy_led_pin, 100, 800)
+
+--~ busy_led.set_on(false)
+
 --
 -- Connecting to WiFi
 --
@@ -137,7 +163,7 @@ local enter_connecting = function()
             end)
         end
     )
-end    
+end 
 
 --
 -- Fetching the JSON feed and saving it in a file to process later.
@@ -253,4 +279,23 @@ print_new = function()
     enter_printing()
 end
 
--- enter_connecting()
+test_error = function()
+	enter_idle(false)
+end
+
+local check_button = _require("button")(check_button_pin, function(click_count, hold)
+	if hold then
+		log("%d-click & hold", click_count)
+	else
+		log("%d-click", click_count)
+	end
+	
+	if click_count == 1 then
+		if hold then
+			log("Restarting on click & hold")
+			node.dsleep(1000)
+		else
+			check()
+		end
+	end
+end)
