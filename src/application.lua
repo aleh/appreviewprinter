@@ -6,9 +6,6 @@ local busy_led_pin = 2
 local ready_led_pin = 3
 local error_led_pin = 4
 
--- A push button that can trigger checking.
-local check_button_pin = 7
-
 gpio.mode(busy_led_pin, gpio.OUTPUT)
 gpio.write(busy_led_pin, gpio.LOW)
 gpio.mode(ready_led_pin, gpio.OUTPUT)
@@ -60,14 +57,14 @@ end
 local code, info = node.bootreason()
 local reasons = {
     [0] = "power-on",
-    [1] = "h/w watchdog",
-    [2] = "exception reset",
-    [3] = "s/w watchdog",
-    [4] = "s/w restart",
-    [5] = "deep sleep wake up",
-    [6] = "ext reset"
+    [1] = "h/w wdg",
+    [2] = "exc rst",
+    [3] = "s/w wdg",
+    [4] = "s/w rst",
+    [5] = "dsleep wake up",
+    [6] = "ext rst"
 }
-log("Boot reason: %s", reasons[info] or info or "unknown")
+log("Boot reason: %s", reasons[info] or info or "?")
 reasons = nil
 
 -- Let's see how much heap we begin with.
@@ -279,11 +276,9 @@ print_new = function()
     enter_printing()
 end
 
-test_error = function()
-	enter_idle(false)
-end
+-- A push button that can trigger checking.
+_require("button")(7, function(click_count, hold)
 
-local check_button = _require("button")(check_button_pin, function(click_count, hold)
 	if hold then
 		log("%d-click & hold", click_count)
 	else
@@ -292,7 +287,6 @@ local check_button = _require("button")(check_button_pin, function(click_count, 
 	
 	if click_count == 1 then
 		if hold then
-			log("Restarting on click & hold")
 			node.dsleep(1000)
 		else
 			check()

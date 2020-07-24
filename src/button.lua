@@ -13,7 +13,7 @@ Parameters:
 ]]--
 return function(pin, callback)
 	
-	local r = require("click_recognizer")(
+	local r = _require("click_recognizer")(
 		10,		-- Debounce.
 		200,	-- Double click.
 		1000,	-- Hold (as click & hold).

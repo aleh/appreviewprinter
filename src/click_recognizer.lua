@@ -100,21 +100,15 @@ return function(debounce_timeout, double_click_timeout, hold_timeout, callback, 
 		end
 				
 		if next_time then
-			local dt = next_time - now
-			if dt >= 0 then 
-				return dt 
-			else 
-				return 0 
-			end
+			return next_time - now
 		else
 			return inf_time
 		end
 	end
 	
 	return function(level, now)
-		local debounce_time = debounce(level, now)
+		local dt = debounce(level, now)
 		local process_time = process(debounced_level, debounced_level_time)
-		local dt = debounce_time
 		if process_time < dt then
 			dt = process_time
 		end

@@ -9,10 +9,10 @@ Parameters:
 ]]--
 return function(networks, callback)
 
-    assert(networks and callback)
+	-- assert(networks and callback)
 
     local log = function(message, ...)
-        print(string.format("connection: " .. message, ...))
+        print(string.format("connect: " .. message, ...))
     end
 
     local state = 'idle'
@@ -30,7 +30,7 @@ return function(networks, callback)
     local did_connect = function(ip)
 
         if state ~= 'connecting' then
-            log("Connected, though don't need to be")
+            log("Connected but don't need to be")
             return
         end
     
@@ -67,14 +67,14 @@ return function(networks, callback)
 
     current_ssid = nil        
     state = 'connecting'
-    log("Searching known networks...")
+    log("Searching known SSIDs...")
                                 
     wifi.setmode(wifi.STATION)
             
     wifi.sta.getap(function (t)
 
         if state ~= 'connecting' then
-            log("Got a list of networks, but don't need a connection at the moment")
+            log("Got SSIDs, but not trying to connect")
             return
         end
         
@@ -104,6 +104,6 @@ return function(networks, callback)
             end
         end
 
-        did_fail_to_connect("Don't see any known networks")
+        did_fail_to_connect("No known SSIDs")
     end)
 end
