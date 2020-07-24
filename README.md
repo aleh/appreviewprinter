@@ -49,3 +49,9 @@ TTL connector wires (from left to right when looking at the PCB so the reset but
         BLUE   - sort of a BUSY signal: LOW when the printer is ready to accept incoming data; HIGH otherwise.
 
 See `./doc/escpos.pdf` on some of the escape commands supported.
+
+## Enclosure
+
+The enclosure consists of two pieces that can be printed without support. (Put the front part, "Box Front.stl" and the button, "Button.stl", on their faces). Use 3 by 9 mm screws directly into plastic to attach the boards and the back cover. See `./enclosure` for STL and Fusion 360 sources. I used red PETG for the box (semi-transparent effect) and white PLA for the single button (for contrast). 
+
+---
