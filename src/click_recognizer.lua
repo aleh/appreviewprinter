@@ -1,5 +1,5 @@
 -- App Store Review Printer.
--- Copyright (C) 2018-2020, Aleh Dzenisiuk. All rights reserved.
+-- Copyright (C) 2018-2021, Aleh Dzenisiuk. All rights reserved.
 
 --[[
 State machine used to debounce buttons and recognize N-click, and N-click and hold patterns, e.g click and hold, double click, triple click and hold, etc.

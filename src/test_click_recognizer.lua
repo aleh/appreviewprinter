@@ -1,5 +1,5 @@
 -- App Store Review Printer.
--- Copyright (C) 2020, Aleh Dzenisiuk. All rights reserved.
+-- Copyright (C) 2018-2021, Aleh Dzenisiuk. All rights reserved.
 
 -- Working in milliseconds here.
 local r = require("click_recognizer")(

@@ -1,5 +1,5 @@
 -- App Store Review Printer.
--- Copyright (C) 2018, Aleh Dzenisiuk. All rights reserved.
+-- Copyright (C) 2018-2021, Aleh Dzenisiuk. All rights reserved.
 
 -- Stub NodeMCU-specific stuff to be able to test it on a desktop.
 if not node then

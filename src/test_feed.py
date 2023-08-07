@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 # App Store Review Printer.
-# Copyright (C) 2018, Aleh Dzenisiuk. All rights reserved.
+# Copyright (C) 2018-2021, Aleh Dzenisiuk. All rights reserved.
 
 from flask import Flask
 import lorem

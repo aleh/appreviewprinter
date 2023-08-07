@@ -1,5 +1,5 @@
 -- App Store Review Printer.
--- Copyright (C) 2018, Aleh Dzenisiuk. All rights reserved.
+-- Copyright (C) 2018-2021, Aleh Dzenisiuk. All rights reserved.
 
 local max_mem = 0
 local print_mem = function()

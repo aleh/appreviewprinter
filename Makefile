@@ -9,10 +9,11 @@ FILES=$(filter-out $(EXCLUDE),$(SRC))
 DDIR=.deps
 DEPS=$(patsubst %.lua,%.d,$(patsubst %,$(DDIR)/%,$(FILES)))
 
-UPLOADER=nodemcu-uploader --timeout 10 --port /dev/tty.wchusbserial* 
+# UPLOADER=nodemcu-uploader --timeout 10 --port /dev/tty.wchusbserial*
+UPLOADER=nodemcu-uploader --timeout 10 --port /dev/tty.usbserial-*
 
 $(DDIR)/%.d: %.lua
-	luac-5.1 -p $<
+	luac-5.4 -p $<
 	$(UPLOADER) upload --compile $<:$(notdir $<)
 	mkdir -p $(dir $@)
 	touch $@

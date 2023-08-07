@@ -1,5 +1,5 @@
 -- App Store Review Printer.
--- Copyright (C) 2019, Aleh Dzenisiuk. All rights reserved.
+-- Copyright (C) 2018-2021, Aleh Dzenisiuk. All rights reserved.
 
 return function(pin, on_time, off_time)
 		

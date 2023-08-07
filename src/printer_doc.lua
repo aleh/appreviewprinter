@@ -1,5 +1,5 @@
 -- App Store Review Printer.
--- Copyright (C) 2018, Aleh Dzenisiuk. All rights reserved.
+-- Copyright (C) 2018-2021, Aleh Dzenisiuk. All rights reserved.
 
 local self = {}
 
@@ -11,7 +11,7 @@ local lines, line, col, max_cols
 local mode = 0
 
 local FONT_A_MAX_COLS = 30
-local FONT_B_MAX_COLS = 42
+local FONT_B_MAX_COLS = 40
 
 self.begin = function(_self)
     
